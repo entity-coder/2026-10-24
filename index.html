@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalonBook — Salon Booking &amp; Billing</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="no-print">
+  <h1>✂️ SalonBook</h1>
+  <p class="subtitle">Appointments, services &amp; billing for salons, spas &amp; barbershops — works offline, data stays in your browser.</p>
+</header>
+
+<nav class="tabs no-print" role="tablist">
+  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="services">Services &amp; Staff</button>
+  <button class="tab-btn" data-tab="appointments">Appointments</button>
+  <button class="tab-btn" data-tab="billing">Billing</button>
+  <button class="tab-btn" data-tab="customers">Customers</button>
+</nav>
+
+<main>
+  <!-- ============ DASHBOARD ============ -->
+  <section id="tab-dashboard" class="tab-section active">
+    <h2>Today at a glance</h2>
+    <div class="cards">
+      <div class="card"><span class="card-num" id="dash-appts">0</span><span class="card-label">Appointments today</span></div>
+      <div class="card"><span class="card-num" id="dash-revenue">₹0</span><span class="card-label">Revenue today</span></div>
+      <div class="card"><span class="card-num" id="dash-customers">0</span><span class="card-label">Customers on record</span></div>
+      <div class="card"><span class="card-num" id="dash-services">0</span><span class="card-label">Services offered</span></div>
+    </div>
+
+    <h3>Staff-wise bookings today</h3>
+    <table class="table">
+      <thead><tr><th>Staff</th><th>Bookings</th><th>Completed</th></tr></thead>
+      <tbody id="dash-staff"></tbody>
+    </table>
+
+    <h3>Today's appointments</h3>
+    <div id="dash-today-list" class="list"></div>
+
+    <h3>Recent bills</h3>
+    <div id="dash-recent-bills" class="list"></div>
+
+    <h3>Salon settings</h3>
+    <form id="settings-form" class="form-inline no-print">
+      <label>Salon name <input type="text" id="setting-salon-name" maxlength="60"></label>
+      <label>Default GST % <input type="number" id="setting-gst" min="0" max="28" step="0.5"></label>
+      <button type="submit">Save settings</button>
+    </form>
+    <p class="hint">Settings are stored in your browser only. Use “Save settings” after changing the GST rate — new bills pick it up automatically.</p>
+  </section>
+
+  <!-- ============ SERVICES & STAFF ============ -->
+  <section id="tab-services" class="tab-section">
+    <h2>Service menu</h2>
+    <form id="service-form" class="form-grid no-print">
+      <label>Service name <input type="text" id="svc-name" required maxlength="60" placeholder="e.g. Haircut"></label>
+      <label>Duration (minutes) <input type="number" id="svc-duration" required min="5" max="480" step="5" value="30"></label>
+      <label>Price (₹) <input type="number" id="svc-price" required min="0" step="1" placeholder="250"></label>
+      <fieldset>
+        <legend>Offered by (leave all ticked for everyone)</legend>
+        <div id="svc-staff-checks" class="checks"></div>
+      </fieldset>
+      <button type="submit">Add service</button>
+    </form>
+    <table class="table">
+      <thead><tr><th>Service</th><th>Duration</th><th>Price</th><th>Staff</th><th></th></tr></thead>
+      <tbody id="service-list"></tbody>
+    </table>
+
+    <h2>Staff</h2>
+    <form id="staff-form" class="form-inline no-print">
+      <label>Name <input type="text" id="staff-name" required maxlength="60" placeholder="e.g. Priya"></label>
+      <label>Role <input type="text" id="staff-role" maxlength="40" placeholder="e.g. Senior stylist"></label>
+      <button type="submit">Add staff</button>
+    </form>
+    <table class="table">
+      <thead><tr><th>Name</th><th>Role</th><th></th></tr></thead>
+      <tbody id="staff-list"></tbody>
+    </table>
+    <p class="hint">Deleting a staff member keeps their past appointments readable (the name is stored on each appointment) but removes them from future booking lists.</p>
+  </section>
+
+  <!-- ============ APPOINTMENTS ============ -->
+  <section id="tab-appointments" class="tab-section">
+    <h2>Book an appointment</h2>
+    <form id="appt-form" class="form-grid no-print">
+      <label>Date <input type="date" id="appt-date" required></label>
+      <label>Start time <input type="time" id="appt-time" required></label>
+      <label>Staff
+        <select id="appt-staff" required></select>
+      </label>
+      <label>Service
+        <select id="appt-service" required></select>
+      </label>
+      <label>Customer name <input type="text" id="appt-customer" required maxlength="60"></label>
+      <label>Phone <input type="tel" id="appt-phone" maxlength="15" placeholder="Optional, used to link history"></label>
+      <label class="wide">Notes <input type="text" id="appt-notes" maxlength="120" placeholder="Optional"></label>
+      <button type="submit">Book appointment</button>
+    </form>
+    <p id="appt-error" class="error" hidden></p>
+    <p class="hint" id="appt-duration-hint"></p>
+
+    <h2>Day view</h2>
+    <form class="form-inline no-print">
+      <label>Date <input type="date" id="day-date"></label>
+      <label>Staff
+        <select id="day-staff"><option value="all">All staff</option></select>
+      </label>
+    </form>
+    <div id="day-list" class="list"></div>
+  </section>
+
+  <!-- ============ BILLING ============ -->
+  <section id="tab-billing" class="tab-section">
+    <h2>Walk-in billing</h2>
+    <div id="bill-form-wrap" class="no-print">
+      <form id="bill-form" class="form-grid">
+        <label>Customer name <input type="text" id="bill-customer" required maxlength="60"></label>
+        <label>Phone <input type="tel" id="bill-phone" maxlength="15"></label>
+        <label>From appointment (optional)
+          <select id="bill-appt"><option value="">Walk-in (no appointment)</option></select>
+        </label>
+        <label>Payment
+          <select id="bill-payment">
+            <option>Cash</option><option>UPI</option><option>Card</option>
+          </select>
+        </label>
+        <label>Discount % <input type="number" id="bill-discount" min="0" max="100" step="1" value="0"></label>
+        <label>GST % <input type="number" id="bill-gst" min="0" max="28" step="0.5" value="18"></label>
+      </form>
+
+      <div class="form-inline">
+        <label>Add service
+          <select id="bill-service"></select>
+        </label>
+        <button type="button" id="bill-add-service">Add service</button>
+        <label>Product name <input type="text" id="bill-product-name" maxlength="60" placeholder="e.g. Shampoo 250ml"></label>
+        <label>Price (₹) <input type="number" id="bill-product-price" min="0" step="1"></label>
+        <button type="button" id="bill-add-product">Add product</button>
+      </div>
+
+      <table class="table">
+        <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
+        <tbody id="bill-items"></tbody>
+      </table>
+      <div id="bill-totals" class="totals"></div>
+      <button type="button" id="bill-save">Save bill</button>
+      <p id="bill-error" class="error" hidden></p>
+    </div>
+
+    <div id="bill-view" hidden>
+      <div id="bill-print-area"></div>
+      <div class="no-print form-inline">
+        <button type="button" id="bill-print">Print / Save as PDF</button>
+        <button type="button" id="bill-close-view">Back to billing</button>
+      </div>
+    </div>
+
+    <h2 class="no-print">Past bills</h2>
+    <div id="bill-list" class="list no-print"></div>
+  </section>
+
+  <!-- ============ CUSTOMERS ============ -->
+  <section id="tab-customers" class="tab-section">
+    <h2>Customer history</h2>
+    <p class="hint">Customers are grouped by phone number when one is given, otherwise by name. “Total spent” counts saved bills only, so a booked-but-unbilled visit does not inflate revenue.</p>
+    <table class="table">
+      <thead><tr><th>Customer</th><th>Phone</th><th>Appointments</th><th>Bills</th><th>Total spent</th><th>Last visit</th></tr></thead>
+      <tbody id="customer-list"></tbody>
+    </table>
+  </section>
+</main>
+
+<footer class="no-print">
+  <p>SalonBook stores everything in this browser (localStorage). No account, no server, no data leaves your device. Open <code>index.html</code> directly or host it on GitHub Pages.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
